@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +24,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment.Companion
+import androidx.compose.ui.draw.rotate
+import java.nio.file.WatchEvent
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +53,9 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun DiceRollerApp() {
-    DiceWithButtonAndImage(modifier = Modifier)
+    DiceWithButtonAndImage(modifier = Modifier
+        .fillMaxSize()
+        .wrapContentSize(Alignment.Center))
 }
 
 @Composable
@@ -49,14 +63,39 @@ fun DiceWithButtonAndImage(
     modifier: Modifier = Modifier
         .fillMaxSize()
         .wrapContentSize(Alignment.Center)
-) { var result = 1
+) {
+    var result by remember { mutableStateOf(1) }
+    var rotation by remember { mutableStateOf(0f) }
+    val animatedRotation by animateFloatAsState(
+        targetValue = rotation,
+        animationSpec = tween(durationMillis = 400),
+        label = "dice_rotation"
+    )
+
+    val imageResource = when (result) {
+        1 -> R.drawable.dice_1
+        2 -> R.drawable.dice_2
+        3 -> R.drawable.dice_3
+        4 -> R.drawable.dice_4
+        5 -> R.drawable.dice_5
+        else -> R.drawable.dice_6
+    }
+
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
-            painter = painterResource(R.drawable.dice_1),
-            contentDescription = "1"
+            painter = painterResource(imageResource),
+            contentDescription = result.toString(),
+            modifier = Modifier
+                .size(450.dp)
+                .rotate(animatedRotation)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {result = (1..6).random()}) {
+        Button(
+            onClick = {
+                result = (1..6).random()
+                rotation += 360f
+            },
+        ) {
             Text(stringResource(R.string.roll))
         }
     }
